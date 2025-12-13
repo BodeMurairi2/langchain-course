@@ -10,12 +10,13 @@ load_dotenv("../model/auth.env")
 model = ChatGoogleGenerativeAI(model=os.getenv("GEMINI_AI_MODEL"),
                                api_key=os.getenv("GEMINI_API_KEY")
                                )
-
+# option 1
 system_message = SystemMessage("You are a great education advisor")
 human_message = HumanMessage("How to get scholarship?")
 
 messages = [system_message, human_message]
 
+# option 2
 second_messages = [
     {"role":"system", "content":"You are a great education advisor"},
     {"role":"user", "content":"How to get scholarship?"},
