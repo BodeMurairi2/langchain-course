@@ -1,0 +1,37 @@
+2025 in Review
+The Year in Computer Science
+By
+Michael Moyer
+December 16, 2025
+
+Explore the year’s most surprising computational revelations, including a new fundamental relationship between time and space, an undergraduate who overthrew a 40-year-old conjecture, and the unexpectedly effortless triggers that can turn AI evil.
+
+Cryptographers Show That AI Protections Will Always Have Holes
+
+artificial intelligence
+Cryptographers Show That AI Protections Will Always Have Holes
+By
+Peter Hall
+December 10, 2025
+
+Large language models such as ChatGPT come with filters to keep certain info from getting out. A new mathematical argument shows that systems like this can never be completely safe.
+
+‘Reverse Mathematics’ Illuminates Why Hard Problems Are Hard
+An inverse pyramid built out of playing cards.
+computational complexity
+‘Reverse Mathematics’ Illuminates Why Hard Problems Are Hard
+By
+Ben Brubaker
+December 1, 2025
+
+Researchers have used metamathematical techniques to show that certain theorems that look superficially distinct are in fact logically equivalent.
+
+To Have Machines Make Math Proofs, Turn Them Into a Puzzle
+
+Q&A
+To Have Machines Make Math Proofs, Turn Them Into a Puzzle
+By
+John Pavlus
+November 10, 2025
+
+Marijn Heule turns mathematical statements into something like Sudoku puzzles, then has computers go to work on them. His proofs have been called “disgusting,” but they go beyond what any human can do.
