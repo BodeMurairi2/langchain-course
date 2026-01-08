@@ -2,18 +2,39 @@
 
 from langchain.tools import tool
 
-@tool("search_inside_file")
-def search_database(query:str, limit:int)->str:
+@tool(
+    "search_inside_file",
+    return_direct=False
+)
+def search_database(query: str, limit: int = 1000) -> str:
     """
-    This tool uses query and limit
-    query:str which is the key word to find in the file
-    limit:int provides the limit for slicing.
+    Search for a keyword or phrase inside a text file.
+
+    Use this tool when you need to:
+    - Check whether a word or phrase exists in the database
+    - Retrieve lines that mention a specific topic
+    - Gather context before explaining or summarizing information
+
+    Arguments:
+    - query (str): The keyword or phrase to search for (e.g. "AI", "artificial intelligence").
+      This search is case-insensitive and matches partial words.
+    - limit (int, optional): The maximum number of lines to scan from the file.
+      Use a large value (e.g. 500–2000) to search most or all of the file.
+
+    Returns:
+    - A string containing the matching lines from the file (up to 5 results),
+      or a clear message if no matches are found.
     """
-    with open("search.txt","r") as file:
+    results = []
+
+    with open("search.txt", "r") as file:
         data = file.readlines()
-    
-    for search in data[:limit]:
-        if query == search:
-            return f"Found {limit} results for {query}"
-    
-    return f"Nothing matches {query} for {limit}"
+
+    for line in data[:limit]:
+        if query.lower() in line.lower():
+            results.append(line.strip())
+
+    if results:
+        return "\n".join(results[:5])
+
+    return f"No matches found for '{query}' in the first {limit} lines."

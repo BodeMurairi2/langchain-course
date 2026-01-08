@@ -21,10 +21,6 @@ tools = [search_database]
 
 agent = create_agent(model=model, tools=tools)
 
-prompt = {
-    "tool": "search_inside_file",
-    "query": "AI",
-    "limit": 10
-}
+prompt = {"messages": [("user", "Search the entire database for the word 'AI' or 'artificial intelligence' . If you find, explain what the world is and its purpose")]}
 
-print(agent.invoke(prompt))
+print(agent.invoke(prompt)["messages"][-1].content)
