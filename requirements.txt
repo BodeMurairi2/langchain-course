@@ -1,4 +1,13 @@
+# LangChain & Google AI integrations
 langchain[google-genai]
 langchain-google-vertexai
-python-dotenv
 langchain-google-genai
+
+# Environment variables
+python-dotenv
+
+# PostgreSQL driver
+psycopg[binary]
+
+# Latest LangGraph (pre-release included if available)
+--pre langgraph
