@@ -1,53 +1,97 @@
 #!/usr/bin/env python3
 
 import os
+import uuid
 from dotenv import load_dotenv
 from pathlib import Path
+from pprint import pprint
 
 from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.messages import HumanMessage, AIMessage, SystemMessage
+from langchain.messages import HumanMessage, SystemMessage
+from langchain.agents.middleware import SummarizationMiddleware
+
 from langgraph.checkpoint.memory import InMemorySaver
 
 from tool.call_tool import get_instant_weather
 
-env_path = Path(__file__).parent.parent/"weather.env"
+# Load environment variables
+env_path = Path(__file__).parent.parent / "weather.env"
 load_dotenv(env_path)
 
+# Memory config
 memory_config = {
-    "MEMORY":InMemorySaver(),
-    "THREAD_ID":"weather-session-1"
+    "MEMORY": InMemorySaver(),
+    "THREAD_ID": str(uuid.uuid4())
 }
 
+# Initialize Gemini model
 model = ChatGoogleGenerativeAI(
     model=os.getenv("GEMINI_AI_MODEL"),
     api_key=os.getenv("GEMINI_API_KEY"),
     temperature=0.1,
-    max_tokens=2000
+    max_tokens=4000
 )
 
+# Tools
 tools = [get_instant_weather]
 
-weather_agent = create_agent(model=model,
-                     tools=tools,
-                     checkpointer=memory_config["MEMORY"]
-                     )
+# Create agent
+weather_agent = create_agent(
+    model=model,
+    tools=tools,
+    checkpointer=memory_config["MEMORY"],
+    middleware=[
+        SummarizationMiddleware(
+            model=model,
+            trigger=("tokens",3000),
+            keep=("messages",10)
+        )
+    ]
+)
 
+# System prompt
 SYS_PROMPT = SystemMessage(
     content=(
-        "You are an expert meteorologist"
-        "You MUST call the weather tool to get real-time data "
-        "before answering any weather-related question. "
+        "You are an expert meteorologist. "
+        "Only call the weather tool to get real-time data when the user explicitly asks "
+        "about weather conditions, temperature, rain, or forecasts. "
         "Do not guess weather conditions. "
         "When advising foreigners, consider local lifestyle, "
         "transport, rain patterns, and health comfort. "
         "Keep advice practical and culturally appropriate. "
         "If the weather tool returns an error, politely explain that "
         "real-time data is unavailable and provide general seasonal advice instead. "
-        "Do not use asterisks in your response."
-        )
-        )
+        "Do not use asterisks or ** in your response."
+    )
+)
 
+# Function to display weather neatly
+def display_weather(result: dict):
+    """
+    Nicely formats the weather API response
+    """
+    if not result or "error" in result:
+        print("Weather data unavailable. Showing general seasonal advice instead.")
+        return
+    
+    print("\n🌤 Weather Report 🌤")
+    print("------------------------")
+    print(f"Location: {result.get('location', 'Unknown')}")
+    print(f"Local Time: {result.get('localtime', 'Unknown')}")
+    print(f"Temperature: {result.get('temperature_c', 'Unknown')} °C")
+    
+    condition = result.get("condition", {}).get("text") if result.get("condition") else "Unknown"
+    print(f"Condition: {condition}")
+    
+    print(f"Humidity: {result.get('humidity', 'Unknown')}%")
+    print(f"Wind: {result.get('wind_kph', 'Unknown')} kph, Direction: {result.get('wind_dir', 'Unknown')}")
+    
+    print(f"Feels Like: {result.get('feelslike_c', 'Unknown')} °C")
+    print("------------------------\n")
+
+
+# Main agent loop
 def agent(agent):
     print("Hello! I am your Meteorologist assistant. What can I do for you today?")
     while True:
@@ -63,17 +107,29 @@ def agent(agent):
 
         agent_response = weather_agent.invoke(
             {"messages": [SYS_PROMPT, HumanMessage(content=user_question)]},
-            config={"configurable":{"thread_id":memory_config["THREAD_ID"]}}
-            )
+            config={"configurable": {"thread_id": memory_config["THREAD_ID"]}}
+        )
 
         ai_response = agent_response["messages"][-1].content
-        
+
+        # Pretty-print AI response or weather report
         if isinstance(ai_response, list):
             for message_dict in ai_response:
-                print("Your Assistant:", message_dict["text"])
-        
+                content = message_dict.get("text") or message_dict.get("content")
+                if isinstance(content, dict) and "temperature_c" in content:
+                    display_weather(content)
+                else:
+                    print("\nYour Assistant:\n------------------------")
+                    pprint(content)
+                    print("------------------------\n")
         else:
-            print("Your Assistant:", ai_response)
+            if isinstance(ai_response, dict) and "temperature_c" in ai_response:
+                display_weather(ai_response)
+            else:
+                print("\nYour Assistant:\n------------------------")
+                pprint(ai_response)
+                print("------------------------\n")
+
 
 if __name__ == "__main__":
     agent(agent=weather_agent)

@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
 
 import requests
+
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import Literal, Any
+
 from langchain.tools import tool, ToolRuntime
+from langchain.messages import RemoveMessage
+from langchain.agents import AgentState
+from langchain.agents.middleware import before_model
+
+from langgraph.runtime import Runtime
+from langgraph.graph.message import REMOVE_ALL_MESSAGES
 
 env_path = Path(__file__).parent.parent/"weather.env"
 load_dotenv(env_path)
@@ -50,7 +59,7 @@ def get_instant_weather(location:str,
     current_weather_url = f"{base_url}/current.json?q={location}"
     
     try:
-        weather_data = requests.get(url=current_weather_url,params=parameter)
+        weather_data = requests.get(url=current_weather_url,params=parameter, timeout=30)
         weather_data.raise_for_status()
     except Exception as error:
         return {"message":"Oops! An error occured","error":error}
@@ -74,15 +83,23 @@ def get_instant_weather(location:str,
         "feelslike_c":result["current"]["feelslike_c"]
         }
 
-@tool
-def summarize_conversation(runtime:ToolRuntime)-> str:
-    """This tool summarizes user conversation"""
-    user_messages = runtime.state["messages"]
-    human_msgs = sum(1 for m in user_messages if m.__class__.__name__ == "HumanMessage")
-    ai_msgs = sum(1 for m in user_messages if m.__class__.__name__ == "AIMessage")
-    tool_msgs = sum(1 for m in user_messages if m.__class__.__name__ == "ToolMessage")
+@before_model
+def trim_messages(state:AgentState, runtime:Runtime):
+    """Keep the last messages four messages"""
+    messages = state["messages"]
 
-    return f"Conversation has {human_msgs} user user_user_messages, {ai_msgs} AI responses, and {tool_msgs} tool results"
+    if len(messages) <= 3:
+        return None
+    
+    first_messages = messages[0]
+    recent_messages = messages[-4:] if len(messages) < 10 else messages[-3:]
+    new_messages = [first_messages] + recent_messages
+    return {
+        "messages": [
+            RemoveMessage(id=REMOVE_ALL_MESSAGES),
+            *new_messages
+        ]
+    }
 
 if __name__ == "__main__":
     city = "Kigali"
