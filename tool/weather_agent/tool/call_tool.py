@@ -16,6 +16,7 @@ from langchain.agents.middleware import before_model
 
 from langgraph.runtime import Runtime
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
+from langgraph.types import Command
 
 env_path = Path(__file__).parent.parent/"weather.env"
 load_dotenv(env_path)
@@ -80,7 +81,8 @@ def get_instant_weather(location:str,
         "precip_in":result["current"]["precip_in"],
         "humidity":result["current"]["humidity"],
         "cloud":result["current"]["cloud"],
-        "feelslike_c":result["current"]["feelslike_c"]
+        "feelslike_c":result["current"]["feelslike_c"],
+        "last_city":result["location"]["name"]
         }
 
 @before_model
