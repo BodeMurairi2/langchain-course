@@ -18,8 +18,8 @@ from langgraph.runtime import Runtime
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
 from langgraph.types import Command
 
-env_path = Path(__file__).parent.parent/"weather.env"
-load_dotenv(env_path)
+#env_path = Path(__file__).parent.parent/"weather.env"
+load_dotenv()
 
 class Weather(BaseModel):
     """Pydantic for weather api class"""

@@ -15,9 +15,9 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from tool.call_tool import get_instant_weather
 
+
 # Load environment variables
-env_path = Path(__file__).parent.parent / "weather.env"
-load_dotenv(env_path)
+load_dotenv()
 
 # Memory config
 memory_config = {
@@ -112,7 +112,6 @@ def agent(agent):
 
         ai_response = agent_response["messages"][-1].content
 
-        # Pretty-print AI response or weather report
         if isinstance(ai_response, list):
             for message_dict in ai_response:
                 content = message_dict.get("text") or message_dict.get("content")
