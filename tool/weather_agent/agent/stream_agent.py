@@ -12,6 +12,7 @@ from langchain.messages import HumanMessage, SystemMessage
 from langchain.agents.middleware import SummarizationMiddleware
 
 from langgraph.checkpoint.memory import InMemorySaver
+#from langgraph.config import get_stream_writer
 
 from tool.call_tool import get_instant_weather
 
@@ -67,7 +68,9 @@ weather_agent = create_agent(
     ]
 )
 
-"""Stram agent"""
+'''
+stream agent progress
+Use stream_mode = "updates"
 
 for chunk in weather_agent.stream(
     {"messages": [{"role": "user", "content": "What is the weather in Kigali"}]},
@@ -82,3 +85,45 @@ for chunk in weather_agent.stream(
         for msg in messages:
             if hasattr(msg, "content"):
                 print(msg.content)
+'''
+
+'''
+stream token inside LLM as they are generated
+use stream_mode = "messages"
+for token, metadata in weather_agent.stream(
+    {"messages":[{"role":"user","content":"What is the best cloths to wear with Kigali's current weather conditions"}]},
+    config={"configurable":{"thread_id":memory_config["THREAD_ID"]}},
+    stream_mode="messages"
+    ):
+    print(f"node: {metadata['langgraph_node']}")
+    print(f"content: {token.content_blocks}")
+    print("\n")
+'''
+
+'''
+Stream updates from tools as they are being executed
+use stream_modes = "custom"
+import:
+from langgraph.config import get_stream_writer
+use the get_stream_writer() to write each execution step
+
+for chunk in weather_agent.stream(
+    {"messages":[{"role":"user","content":"What is the best cloths to wear with Kigali's current weather conditions"}]},
+    config={"configurable":{"thread_id":memory_config["THREAD_ID"]}},
+    stream_mode="custom"
+    ):
+    print(chunk)
+'''
+
+'''
+streaming multiple nodes: Agent progress, llm token generation, tool calls executation
+stream_mode = []
+for stream_mode, chunk in weather_agent.stream(
+    {"messages":[{"role":"user","content":"What is the best cloths to wear with Kigali's current weather conditions"}]},
+    config={"configurable":{"thread_id":memory_config["THREAD_ID"]}},
+    stream_mode=["updates","custom"]
+    ):
+    print(f"Stream mode: {stream_mode}")
+    print("________________________")
+    print(f"Chunk: {chunk}")
+'''

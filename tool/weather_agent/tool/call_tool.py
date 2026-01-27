@@ -16,6 +16,8 @@ from langchain.agents.middleware import before_model
 
 from langgraph.runtime import Runtime
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
+from langgraph.config import get_stream_writer
+
 from langgraph.types import Command
 
 #env_path = Path(__file__).parent.parent/"weather.env"
@@ -44,7 +46,7 @@ def get_instant_weather(location:str,
     Args:
         location:str = Field(Description='Name of the city')
     """
-    
+    writer = get_stream_writer()    
     weather_api_key = os.getenv("WEATHER_API_KEY")
     if not weather_api_key:
         raise ValueError("Weather API key is missing")
@@ -57,6 +59,7 @@ def get_instant_weather(location:str,
 
     user_data = Weather(location=location)
     location = user_data.location
+    writer(f"Parse city {location} to weather API")
     current_weather_url = f"{base_url}/current.json?q={location}"
     
     try:
@@ -66,6 +69,7 @@ def get_instant_weather(location:str,
         return {"message":"Oops! An error occured","error":error}
     
     result = weather_data.json()
+    writer(f"weather data available for city: {location}")
     return {
         "location":result["location"]["name"],
         "localtime":result["location"]["localtime"],
