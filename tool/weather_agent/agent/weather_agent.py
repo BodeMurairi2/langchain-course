@@ -14,7 +14,7 @@ from langchain.agents.middleware import SummarizationMiddleware
 from langgraph.checkpoint.memory import InMemorySaver
 
 from tool.call_tool import get_instant_weather
-
+from structured_output.output import Response_output, structured_output
 
 # Load environment variables
 load_dotenv()
@@ -47,7 +47,8 @@ weather_agent = create_agent(
             trigger=("tokens",3000),
             keep=("messages",10)
         )
-    ]
+    ],
+    response_format=Response_output
 )
 
 # System prompt
@@ -104,10 +105,12 @@ def agent(agent):
         if not user_question.strip():
             print("No question asked! Please enter your question...")
             continue
-
+        custom_profile = {
+            "structured_ouput":True
+        }
         agent_response = weather_agent.invoke(
             {"messages": [SYS_PROMPT, HumanMessage(content=user_question)]},
-            config={"configurable": {"thread_id": memory_config["THREAD_ID"]}}
+            config={"configurable": {"thread_id": memory_config["THREAD_ID"], **custom_profile}}
         )
 
         ai_response = agent_response["messages"][-1].content
