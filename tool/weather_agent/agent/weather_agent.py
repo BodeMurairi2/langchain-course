@@ -44,8 +44,8 @@ weather_agent = create_agent(
     middleware=[
         SummarizationMiddleware(
             model=model,
-            trigger=("tokens",3000),
-            keep=("messages",10)
+            trigger=("tokens",10000),
+            keep=("messages",15)
         )
     ],
     response_format=Response_output
@@ -106,7 +106,7 @@ def agent(agent):
             print("No question asked! Please enter your question...")
             continue
         custom_profile = {
-            "structured_ouput":True
+            "structured_output":True
         }
         agent_response = weather_agent.invoke(
             {"messages": [SYS_PROMPT, HumanMessage(content=user_question)]},

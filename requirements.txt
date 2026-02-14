@@ -11,3 +11,6 @@ psycopg[binary]
 
 # Latest LangGraph (pre-release included if available)
 --pre langgraph
+
+# install colorama
+colorama
