@@ -5,10 +5,10 @@ import uuid
 from dotenv import load_dotenv
 
 from langchain.agents import create_agent
-from langchain_google_genai import GoogleGenerativeAI
-from langchain.messages import HumanMessage, SystemMessage, AIMessage
+from langchain.agents.middleware import ModelRetryMiddleware
 
-from langchain.agents.middleware import ModelFallbackMiddleware
+from langchain_google_genai import GoogleGenerativeAI
+
 from langgraph.checkpoint.memory import InMemorySaver
 
 load_dotenv()
@@ -28,35 +28,24 @@ llm = GoogleGenerativeAI(
     max_tokens=1000
     )
 
-llm_2 = ChatGoogleGenerativeAI(
-    model=gemini_config["gemini_model"],
-    api_key=gemini_config["gemini_api_key_V"],
-    temperature=0.7,
-    max_tokens=2500
-    )
-# memory config
 memory_config = {
     "memory":InMemorySaver(),
-    "thread_id":uuid.uuid5()
+    "thread_id":uuid.uuid4()
 }
 
 agent = create_agent(
     model=llm,
-    tools=[],
-    checkpointer=memory_config["memory"],
+    tools=["search","find","develop"],
     middleware=[
-        ModelFallbackMiddleware([llm_2])
-    ],
-    system_prompt="You are an helpful customer agent assistant"
-)
-
-response = agent.invoke(
-    {
-        "messages":[HumanMessage(content="How to get free credits to your plateform?")]
-    },
-    config={
-        "configurable":{
-            "thread_id":memory_config["thread_id"]
-        }
-        }
+        ModelRetryMiddleware(
+            max_retries=5,
+            tools=["search","find"],
+            retry_on=("ToolError","ToolException","ToolTimeout"),
+            on_failure="continue",
+            backoff_factor=2.0,
+            initial_delay=2,
+            max_delay=80,
+            jitter=True
+        )
+    ]
     )
